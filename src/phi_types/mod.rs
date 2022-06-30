@@ -25,7 +25,7 @@ impl<'a> JudgeLine<'a> {
     }
     pub fn get_pos_at(&self, time: f64) -> (f64, f64) {
         (
-            event_list_get_at(&self.alpha, time),
+            event_list_get_at(&self.pos_x, time),
             event_list_get_at(&self.pos_y, time),
         )
     }

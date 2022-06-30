@@ -55,6 +55,7 @@ pub mod tests{
     fn test_chart() {
         let file = File::open("/home/helium/coding/Rust/phirs/assets/Introduction_chart.json").expect("open err");
         let chart = OfficalLoader::load_chart(&file);
-        dbg!(&chart.lines[0]);
+        assert_eq!(chart.lines[0].get_pos_at(0.0),(0.5,0.5));
+        assert_eq!(chart.lines[0].get_judge_at(0.0), 0.0);
     }
 }
