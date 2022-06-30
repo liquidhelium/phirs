@@ -5,7 +5,7 @@ pub enum NoteType {
     Hit,
     Drag,
     Flick,
-    Hold(f64),
+    Hold(f32),
 }
 #[derive(Debug)]
 pub struct JudgeLine<'a> {
@@ -20,33 +20,33 @@ pub struct JudgeLine<'a> {
 impl<'a> JudgeLine<'a> {
     pub fn new(alpha: Vec<Event>, pos_x: Vec<Event>, pos_y: Vec<Event>, judge_line_at: Vec<Event>, angle: Vec<Event>, notes_above: Vec<Note<'a>>, notes_below: Vec<Note<'a>>) -> Self { Self { alpha, pos_x, pos_y, judge_line_at, angle, notes_above, notes_below } }
 
-    pub fn get_alpha_at(&self, time: f64) -> f64 {
+    pub fn get_alpha_at(&self, time: f32) -> f32 {
         event_list_get_at(&self.alpha, time)
     }
-    pub fn get_pos_at(&self, time: f64) -> (f64, f64) {
-        (
+    pub fn get_pos_at(&self, time: f32) -> [f32;2] {
+        [
             event_list_get_at(&self.pos_x, time),
             event_list_get_at(&self.pos_y, time),
-        )
+        ]
     }
-    pub fn get_angle_at(&self, time: f64) -> f64 {
+    pub fn get_angle_at(&self, time: f32) -> f32 {
         event_list_get_at(&self.angle, time)
     }
-    pub fn get_judge_at(&self, time: f64) -> f64 {
+    pub fn get_judge_at(&self, time: f32) -> f32 {
         event_list_get_at(&self.judge_line_at, time)
     }
 }
 #[derive(Debug)]
 pub struct Note<'a> {
     note_type: NoteType,
-    time: f64,
-    pos_x: f64,
-    pos_y: f64,
+    time: f32,
+    pos_x: f32,
+    pos_y: f32,
     pub parent: Option<&'a JudgeLine<'a>>,
 }
 
 impl<'a> Note<'a> {
-    pub fn new(note_type: NoteType, time: f64, pos_x: f64, pos_y: f64, parent: Option<&'a JudgeLine<'a>>) -> Self { Self { note_type, time, pos_x, pos_y, parent } }
+    pub fn new(note_type: NoteType, time: f32, pos_x: f32, pos_y: f32, parent: Option<&'a JudgeLine<'a>>) -> Self { Self { note_type, time, pos_x, pos_y, parent } }
 }
 
 #[derive(Debug)]
