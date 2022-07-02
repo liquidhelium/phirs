@@ -15,16 +15,16 @@ impl OfficalLoader {
     fn make_note<'a>(note: &serde_json::Value, parent_bpm: f32) -> Note<'a> {
         let phi_time = note["time"].as_i64().expect("time failed");
         let time = OfficalLoader::phi_to_real(phi_time as f32, parent_bpm);
-        let posx = note["positionX"].as_f64().expect("posX failed") * 9.0;
+        let posx = note["positionX"].as_f64().expect("posX failed") / 18.0;
         let posy = note["floorPosition"].as_f64().expect("posY failed") / 2.0;
         let hold_time_phi = note["holdTime"].as_f64().expect("holdtime failed");
         let hold_time = OfficalLoader::phi_to_real(hold_time_phi as f32, parent_bpm);
         let note_type = match note["type"].as_i64() {
             Some(int) => match int {
                 1 => NoteType::Hit,
-                2 => NoteType::Flick,
+                2 => NoteType::Drag,
                 3 => NoteType::Hold(hold_time),
-                4 => NoteType::Drag,
+                4 => NoteType::Flick,
                 _ => panic!("invalid type"),
             },
             None => panic!("Wrong Type for note"),
@@ -44,8 +44,8 @@ impl OfficalLoader {
         Event::new(
             start_time,
             end_time,
-            floorpos as f32,
-            end_position,
+            floorpos as f32 / 2.0,
+            end_position / 2.0,
             EaseType::Linear,
         )
     }

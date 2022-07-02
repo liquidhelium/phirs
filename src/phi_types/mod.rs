@@ -38,15 +38,16 @@ impl<'a> JudgeLine<'a> {
 }
 #[derive(Debug)]
 pub struct Note<'a> {
-    note_type: NoteType,
-    time: f32,
-    pos_x: f32,
-    pos_y: f32,
+    pub note_type: NoteType,
+    pub time: f32,
+    pub pos_x: f32,
+    pub pos_y: f32,
     pub parent: Option<&'a JudgeLine<'a>>,
 }
 
 impl<'a> Note<'a> {
     pub fn new(note_type: NoteType, time: f32, pos_x: f32, pos_y: f32, parent: Option<&'a JudgeLine<'a>>) -> Self { Self { note_type, time, pos_x, pos_y, parent } }
+
 }
 
 #[derive(Debug)]
