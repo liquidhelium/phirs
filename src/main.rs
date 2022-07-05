@@ -159,7 +159,12 @@ impl event::EventHandler<ggez::GameError> for GameState<'_> {
             let judge_pos = line.get_judge_at(time);
             graphics::draw(ctx, &grfline, param)?;
             for note in &line.notes_above {
-                if note.time >= time || true {
+                let mut hold_time:f32 = Default::default();
+                match &note.note_type {
+                    NoteType::Hold(f) => {hold_time = *f}
+                    _ => {}
+                }
+                if note.time + hold_time >= time {
                     let img = match &note.note_type {
                         NoteType::Hit => &self.assets.hit,
                         NoteType::Drag => &self.assets.drag,
@@ -190,6 +195,50 @@ impl event::EventHandler<ggez::GameError> for GameState<'_> {
                         + vec2(pos.x, pos.y);
                     param = param.dest([dest.x, dest.y]).scale(SCALE_FACTOR);
                     if let NoteType::Hold(f) = note.note_type {
+                        phirs::draw_hold(ctx, &self.assets.hold_head, &self.assets.hold_body, &self.assets.hold_tail, self.warph(line.get_judge_at(f+note.time) - note.pos_y), param)?;
+                    }else {
+                        graphics::draw(ctx, img, param)?;
+                    }
+                }
+            }
+            for note in &line.notes_below { // 以后再拆函数， 懒了
+                let mut hold_time:f32 = Default::default();
+                match &note.note_type {
+                    NoteType::Hold(f) => {hold_time = *f}
+                    _ => {}
+                }
+                if note.time + hold_time>= time{
+                    let img = match &note.note_type {
+                        NoteType::Hit => &self.assets.hit,
+                        NoteType::Drag => &self.assets.drag,
+                        NoteType::Hold(_f) => &self.assets.hold,
+                        NoteType::Flick => &self.assets.flick,
+                    };
+                    let anchors: [f32; 2] = match &note.note_type {
+                        NoteType::Hold(_f) => [
+                            img.width() as f32 * SCALE_FACTOR[0] / 2.0 ,
+                            self.assets.hit.height() as f32 * SCALE_FACTOR[1]/ 2.0 ,
+                        ],
+                        _otherwise => [img.width() as f32 * SCALE_FACTOR[0] / 2.0, img.height() as f32 * SCALE_FACTOR[1] / 2.0],
+                    };
+                    let rotation = glam::Mat2::from_angle(angle);
+                    let note_x = note.pos_x;
+                    let note_y = note.pos_y - judge_pos;
+
+                    let mut param = DrawParam {
+                        trans,
+                        src: Rect::new(0.0, 0.0, 1.0, 1.0),
+                        color: Color::WHITE,
+                    };
+                    let dest = rotation
+                        * vec2(
+                            self.warpw(note_x) + anchors[0],
+                            -self.warph(note_y) + anchors[1],
+                        )
+                        + vec2(pos.x, pos.y);
+                    param = param.dest([dest.x, dest.y]).scale(SCALE_FACTOR).rotation(angle +PI);
+                    if let NoteType::Hold(f) = note.note_type {
+                        // TODO fix hold position
                         phirs::draw_hold(ctx, &self.assets.hold_head, &self.assets.hold_body, &self.assets.hold_tail, self.warph(line.get_judge_at(f+note.time) - note.pos_y), param)?;
                     }else {
                         graphics::draw(ctx, img, param)?;
