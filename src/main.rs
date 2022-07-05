@@ -14,26 +14,16 @@ use phirs::{
 };
 use std::f32::consts::PI;
 
-macro_rules! gen_const_str {
-    (
-        const {
-            $prefix:ident : &str = $prevalue:expr,
-            $($name:ident : &str = $value:expr),*$(,)+
-        }
-    ) => {
-        // const $prefix : &str = $prevalue;
-        $(const $name: &str = concat!($prevalue,$value);)*
-    };
-}
-gen_const_str! (const {
-    ASSETS_PREFIX: &str = "/home/helium/coding/Rust/phirs/assets/",
-    FLICK_PATH: &str = "flick.png",
-    HIT_PATH: &str = "tap.png",
-    HOLD_PATH:&str = "hold.png",
-    DRAG_PATH:&str = "drag.png",
-}
-);
-const SCALE_FACTOR: [f32; 2] = [0.1, 1.0];
+
+const FLICK_PATH: &str = "/flick.png";
+const HIT_PATH: &str = "/tap.png";
+const HOLD_PATH:&str = "/hold.png";
+const HOLD_HEAD_PATH:&str = "/HoldHead.png";
+const HOLD_BODY_PATH:&str = "/HoldBody.png";
+const HOLD_TAIL_PATH:&str = "/HoldEnd.png";
+
+const DRAG_PATH:&str = "/drag.png";
+const SCALE_FACTOR: [f32; 2] = [0.1, 0.1];
 // const ASSETS_PREFIX: &str = "/home/helium/coding/Rust/phirs/assets/";
 // const FLICK_PATH: &str = &(ASSETS_PREFIX.to_owned() + "flick.png");
 // const HIT_PATH: &str = &(ASSETS_PREFIX.to_owned() + "tap.png");
@@ -43,6 +33,7 @@ const SCALE_FACTOR: [f32; 2] = [0.1, 1.0];
 struct GameState<'a> {
     chart: Chart<'a>,
     now_time: Duration,
+    do_update: bool,
     win_width: f32,
     win_height: f32,
     assets: Assets,
@@ -51,6 +42,9 @@ struct Assets {
     flick: Image,
     hit: Image,
     hold: Image,
+    hold_head: Image,
+    hold_body: Image,
+    hold_tail: Image,
     drag: Image,
 }
 impl Assets {
@@ -59,6 +53,9 @@ impl Assets {
             flick: Image::new(ctx, FLICK_PATH)?,
             hit: Image::new(ctx, HIT_PATH)?,
             hold: Image::new(ctx, HOLD_PATH)?,
+            hold_head: Image::new(ctx, HOLD_HEAD_PATH)?,
+            hold_body: Image::new(ctx, HOLD_BODY_PATH)?,
+            hold_tail: Image::new(ctx, HOLD_TAIL_PATH)?,
             drag: Image::new(ctx, DRAG_PATH)?,
         })
     }
@@ -72,6 +69,7 @@ impl<'a> GameState<'a> {
             win_height: 800.0,
             win_width: 600.0,
             assets,
+            do_update:true
         })
     }
     fn warph(&self, value: f32) -> f32 {
@@ -83,7 +81,7 @@ impl<'a> GameState<'a> {
 }
 fn main() -> GameResult {
     let mut cb = ggez::ContextBuilder::new("super_simple", "ggez");
-    cb = cb.add_resource_path("/");
+    cb = cb.add_resource_path("/home/helium/coding/Rust/phirs/assets/");
     let (mut ctx, event_loop) = cb.build()?;
 
     let file =
@@ -103,10 +101,12 @@ fn angle_to_radians(angle: f32) -> f32 {
 
 impl event::EventHandler<ggez::GameError> for GameState<'_> {
     fn update(&mut self, ctx: &mut ggez::Context) -> Result<(), ggez::GameError> {
-        self.now_time = self
-            .now_time
-            .checked_add(ggez::timer::delta(ctx))
-            .expect("overflow");
+        if self.do_update {
+            self.now_time = self
+                .now_time
+                .checked_add(ggez::timer::delta(ctx))
+                .expect("overflow");
+        }
         Ok(())
     }
     fn draw(&mut self, ctx: &mut ggez::Context) -> Result<(), ggez::GameError> {
@@ -159,7 +159,7 @@ impl event::EventHandler<ggez::GameError> for GameState<'_> {
             let judge_pos = line.get_judge_at(time);
             graphics::draw(ctx, &grfline, param)?;
             for note in &line.notes_above {
-                if note.time >= time {
+                if note.time >= time || true {
                     let img = match &note.note_type {
                         NoteType::Hit => &self.assets.hit,
                         NoteType::Drag => &self.assets.drag,
@@ -177,7 +177,7 @@ impl event::EventHandler<ggez::GameError> for GameState<'_> {
                     let note_x = note.pos_x;
                     let note_y = note.pos_y - judge_pos;
 
-                    let param = DrawParam {
+                    let mut param = DrawParam {
                         trans,
                         src: Rect::new(0.0, 0.0, 1.0, 1.0),
                         color: Color::WHITE,
@@ -188,7 +188,12 @@ impl event::EventHandler<ggez::GameError> for GameState<'_> {
                             self.warph(note_y) - anchors[1],
                         )
                         + vec2(pos.x, pos.y);
-                    graphics::draw(ctx, img, param.dest([dest.x, dest.y]).scale(SCALE_FACTOR))?;
+                    param = param.dest([dest.x, dest.y]).scale(SCALE_FACTOR);
+                    if let NoteType::Hold(f) = note.note_type {
+                        phirs::draw_hold(ctx, &self.assets.hold_head, &self.assets.hold_body, &self.assets.hold_tail, self.warph(line.get_judge_at(f+note.time) - note.pos_y), param)?;
+                    }else {
+                        graphics::draw(ctx, img, param)?;
+                    }
                 }
             }
         }
@@ -198,6 +203,17 @@ impl event::EventHandler<ggez::GameError> for GameState<'_> {
     fn resize_event(&mut self, _ctx: &mut ggez::Context, width: f32, height: f32) {
         self.win_height = height;
         self.win_width = width;
+    }
+    fn mouse_button_down_event(
+            &mut self,
+            _ctx: &mut Context,
+            button: event::MouseButton,
+            _x: f32,
+            _y: f32,
+        ) {
+        if let event::MouseButton::Right = button {
+            self.do_update = if self.do_update {false} else {true};
+        }
     }
 }
 #[cfg(test)]
