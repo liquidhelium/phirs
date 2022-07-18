@@ -159,12 +159,10 @@ impl event::EventHandler<ggez::GameError> for GameState<'_> {
             let judge_pos = line.get_judge_at(time);
             graphics::draw(ctx, &grfline, param)?;
             for note in &line.notes_above {
-                let mut hold_time:f32 = Default::default();
-                match &note.note_type {
-                    NoteType::Hold(f) => {hold_time = *f}
-                    _ => {}
-                }
-                if note.time + hold_time >= time {
+                if note.time + match &note.note_type {
+                    NoteType::Hold(f) => {*f}
+                    _ => {Default::default()}
+                }>= time {
                     let img = match &note.note_type {
                         NoteType::Hit => &self.assets.hit,
                         NoteType::Drag => &self.assets.drag,
@@ -202,12 +200,10 @@ impl event::EventHandler<ggez::GameError> for GameState<'_> {
                 }
             }
             for note in &line.notes_below { // 以后再拆函数， 懒了
-                let mut hold_time:f32 = Default::default();
-                match &note.note_type {
-                    NoteType::Hold(f) => {hold_time = *f}
-                    _ => {}
-                }
-                if note.time + hold_time>= time{
+                if note.time + match &note.note_type {
+                    NoteType::Hold(f) => {*f}
+                    _ => {Default::default()}
+                }>= time{
                     let img = match &note.note_type {
                         NoteType::Hit => &self.assets.hit,
                         NoteType::Drag => &self.assets.drag,
