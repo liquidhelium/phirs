@@ -65,7 +65,7 @@ impl<'a> GameState<'a> {
     fn new(chart: Chart<'a>, assets: Assets) -> GameResult<Self> {
         Ok(Self {
             chart,
-            now_time: Duration::new(0, 0),
+            now_time: Duration::new(14, 0),
             win_height: 800.0,
             win_width: 600.0,
             assets,
@@ -85,7 +85,7 @@ fn main() -> GameResult {
     let (mut ctx, event_loop) = cb.build()?;
 
     let file =
-        File::open("/home/helium/coding/Rust/phirs/assets/Chart_IN_Error").expect("open err");
+        File::open("/home/helium/coding/Rust/phirs/assets/Introduction_chart.json").expect("open err");
     let chart = OfficalLoader::load_chart(file);
     let assets = Assets::gen(&mut ctx)?;
     let state = GameState::new(chart, assets)?;
@@ -193,7 +193,7 @@ impl event::EventHandler<ggez::GameError> for GameState<'_> {
                         + vec2(pos.x, pos.y);
                     param = param.dest([dest.x, dest.y]).scale(SCALE_FACTOR);
                     if let NoteType::Hold(f) = note.note_type {
-                        phirs::draw_hold(ctx, &self.assets.hold_head, &self.assets.hold_body, &self.assets.hold_tail, self.warph(line.get_judge_at(f+note.time) - note.pos_y), param)?;
+                        phirs::draw_hold(ctx, &self.assets.hold_head, &self.assets.hold_body, &self.assets.hold_tail, self.warph(line.get_judge_at(f+note.time) - note.pos_y), self.warph(-note_y),param)?;
                     }else {
                         graphics::draw(ctx, img, param)?;
                     }
@@ -235,7 +235,7 @@ impl event::EventHandler<ggez::GameError> for GameState<'_> {
                     param = param.dest([dest.x, dest.y]).scale(SCALE_FACTOR).rotation(angle +PI);
                     if let NoteType::Hold(f) = note.note_type {
                         // TODO fix hold position
-                        phirs::draw_hold(ctx, &self.assets.hold_head, &self.assets.hold_body, &self.assets.hold_tail, self.warph(line.get_judge_at(f+note.time) - note.pos_y), param)?;
+                        phirs::draw_hold(ctx, &self.assets.hold_head, &self.assets.hold_body, &self.assets.hold_tail, self.warph(line.get_judge_at(f+note.time) - note.pos_y), self.warph(-note_y),param)?;
                     }else {
                         graphics::draw(ctx, img, param)?;
                     }
